@@ -87,8 +87,6 @@ Por cada fila válida del CSV, la app devuelve:
 
 Actualmente la aplicación está enfocada en el flujo principal de ranking por IVs.
 
-Hay campos del dominio que pueden existir en los datos, como `shadow` o `gl_evo`, pero no alteran el comportamiento principal mostrado en pantalla.
-
 ## Limitaciones funcionales actuales
 
 - no hay validación visual avanzada del CSV antes de procesar

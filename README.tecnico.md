@@ -110,11 +110,6 @@ Columnas necesarias:
 - `def`
 - `hp`
 
-Campos soportados por tipos pero no usados actualmente en el cálculo principal:
-
-- `shadow`
-- `gl_evo`
-
 ## Estructura del proyecto
 
 ```text
@@ -153,7 +148,6 @@ src/
 - procesamiento secuencial en la UI
 - sin manejo visual robusto de errores
 - validación de CSV todavía básica
-- `shadow` y `gl_evo` no participan del cálculo
 - dependencia de que el `dex` exista en el dataset local
 
 ## Posibles mejoras técnicas
