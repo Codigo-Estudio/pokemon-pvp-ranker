@@ -9,9 +9,8 @@ const MASTER_LEAGUE_CP = -1;
 function getMaxLevelIndex(
   leagueCp: number
 ): number {
-  return leagueCp === MASTER_LEAGUE_CP
-    ? Math.min(LEGACY_MAX_LEVEL_INDEX, CPM.length - 1)
-    : Math.min(LEGACY_MAX_LEVEL_INDEX, CPM.length - 1);
+  void leagueCp;
+  return Math.min(LEGACY_MAX_LEVEL_INDEX, CPM.length - 1);
 }
 
 function calculateCp(

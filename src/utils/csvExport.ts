@@ -1,19 +1,29 @@
 import Papa from "papaparse";
 
-const TEMPLATE_COLUMNS = [
+import { PokemonRecord } from "../types/PokemonRecord";
+
+const RESULT_COLUMNS: Array<keyof PokemonRecord | "name"> = [
   "dex",
+  "name",
+  "rank",
+  "level",
+  "cp",
   "atk",
   "def",
   "hp"
 ] as const;
 
-function buildTemplateCsv(): string {
-  return Papa.unparse(
-    [TEMPLATE_COLUMNS],
-    {
-      header: false,
-      newline: "\r\n"
-    }
+function buildResultRows(
+  rows: PokemonRecord[]
+): Array<Record<string, string | number | undefined>> {
+  return rows.map((row) =>
+    RESULT_COLUMNS.reduce<Record<string, string | number | undefined>>(
+      (result, column) => {
+        result[column] = row[column];
+        return result;
+      },
+      {}
+    )
   );
 }
 
@@ -51,10 +61,13 @@ function ensureCsvExtension(
 }
 
 export function downloadCsv(
-  _rows: unknown[],
+  rows: PokemonRecord[],
   filename: string
 ) {
-  const csv = buildTemplateCsv();
+  const csv = Papa.unparse(buildResultRows(rows), {
+    columns: RESULT_COLUMNS,
+    newline: "\r\n"
+  });
   const blob = createCsvBlob(csv);
   const link = createDownloadLink(
     blob,
