@@ -1,51 +1,56 @@
 import { pokeListObj } from "./pokeListObj";
 
-export interface PokemonGoStats {
-  name: string;
-  attack: number;
-  defense: number;
-  stamina: number;
-}
+import { PokemonStatsRecord } from "../types/PokemonBaseStats";
 
-const cache = new Map<number, PokemonGoStats>();
+const pokemonStatsByDex =
+  new Map<number, PokemonStatsRecord>();
+
+function parsePokemonStatsEntry(
+  name: string,
+  rawValue: string
+): PokemonStatsRecord | null {
+  const parts =
+    rawValue.split(",");
+
+  const dex = Number(
+    parts[0].match(/\d+/)?.[0]
+  );
+
+  if (Number.isNaN(dex)) {
+    return null;
+  }
+
+  return {
+    dex,
+    name,
+    attack: Number(parts[1]),
+    defense: Number(parts[2]),
+    stamina: Number(parts[3])
+  };
+}
 
 Object.entries(pokeListObj).forEach(
   ([name, value]) => {
-
-    const parts =
-      String(value).split(",");
-
-    const dexRaw =
-      parts[0];
-
-    const attack =
-      Number(parts[1]);
-
-    const defense =
-      Number(parts[2]);
-
-    const stamina =
-      Number(parts[3]);
-
-    const dex =
-      Number(
-        dexRaw.match(/\d+/)?.[0]
+    const parsedEntry =
+      parsePokemonStatsEntry(
+        name,
+        String(value)
       );
 
-    cache.set(dex, {
-      name,
-      attack,
-      defense,
-      stamina
-    });
+    if (parsedEntry) {
+      pokemonStatsByDex.set(
+        parsedEntry.dex,
+        parsedEntry
+      );
+    }
 
   }
 );
 
 export function getPokemonByDex(
   dex: number
-): PokemonGoStats | null {
+): PokemonStatsRecord | null {
 
-  return cache.get(dex) ?? null;
+  return pokemonStatsByDex.get(dex) ?? null;
 
 }

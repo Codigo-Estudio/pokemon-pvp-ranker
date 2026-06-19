@@ -8,13 +8,9 @@ import {
 
 import {
   type RankEntry
-} from "../ranking/rankingEngine";
+} from "../types/RankEntry";
 
-export interface RankResult {
-  rank: number;
-  level: number;
-  cp: number;
-}
+import { RankResult } from "../types/RankResult";
 
 export async function calculateRank(
 
@@ -30,8 +26,57 @@ export async function calculateRank(
 
 ): Promise<RankResult> {
 
+  const ranking =
+    getOrBuildRanking(
+      attack,
+      defense,
+      stamina,
+      leagueCp
+    );
+
+  const row =
+    findRankEntry(
+      ranking,
+      atk,
+      def,
+      hp
+    );
+
+  if (!row) {
+    throw new Error(
+      "Ranking not found"
+    );
+  }
+
+  return mapRankEntryToResult(row);
+}
+
+function getRankingCacheKey(
+  attack: number,
+  defense: number,
+  stamina: number,
+  leagueCp: number
+): string {
+
   const key =
     `${attack}_${defense}_${stamina}_${leagueCp}`;
+
+  return key;
+}
+
+function getOrBuildRanking(
+  attack: number,
+  defense: number,
+  stamina: number,
+  leagueCp: number
+): RankEntry[] {
+  const key =
+    getRankingCacheKey(
+      attack,
+      defense,
+      stamina,
+      leagueCp
+    );
 
   let ranking =
     rankingCache.get(key);
@@ -52,22 +97,29 @@ export async function calculateRank(
     );
   }
 
-  const row =
-    ranking.find(
-      (x: RankEntry) =>
-        Number(x.atk) === Number(atk) &&
-        Number(x.def) === Number(def) &&
-        Number(x.hp) === Number(hp)
-    );
-  if (!row) {
-    throw new Error(
-      "Ranking not found"
-    );
-  }
+  return ranking;
+}
+
+function findRankEntry(
+  ranking: RankEntry[],
+  atk: number,
+  def: number,
+  hp: number
+): RankEntry | undefined {
+  return ranking.find(
+    (entry: RankEntry) =>
+      entry.atk === Number(atk) &&
+      entry.def === Number(def) &&
+      entry.hp === Number(hp)
+  );
+}
+
+function mapRankEntryToResult(
+  row: RankEntry
+): RankResult {
   return {
     rank: row.rank,
     level: row.level,
     cp: row.cp
   };
-
 }

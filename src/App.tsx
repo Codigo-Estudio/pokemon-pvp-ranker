@@ -30,10 +30,30 @@ import {
 }
     from "./types/PokemonRecord";
 
+import { RankResult } from "./types/RankResult";
+
 import {
     getPokemonByDex
 }
     from "./data/pokemonGoStats";
+
+const DEFAULT_LEAGUE_CP = 1500;
+
+type RankedPokemonRecord = PokemonRecord;
+
+function mapRecordWithRank(
+    row: PokemonRecord,
+    pokemonName: string,
+    rank: RankResult
+): RankedPokemonRecord {
+    return {
+        ...row,
+        name: pokemonName,
+        rank: rank.rank,
+        level: rank.level,
+        cp: rank.cp
+    };
+}
 
 export default function App() {
 
@@ -45,11 +65,58 @@ export default function App() {
 
     const [leagueCp,
         setLeagueCp] =
-        useState(1500);
+        useState(DEFAULT_LEAGUE_CP);
+
+    async function rankPokemonRecord(
+        row: PokemonRecord,
+        selectedLeagueCp: number
+    ): Promise<RankedPokemonRecord | null> {
+        const pokemon =
+            getPokemonByDex(
+                Number(row.dex)
+            );
+
+        if (!pokemon) {
+            console.error(
+                `Pokemon dex ${row.dex} not found`
+            );
+            return null;
+        }
+
+        const rankResult =
+            await calculateRank(
+                pokemon.attack,
+                pokemon.defense,
+                pokemon.stamina,
+                Number(row.atk),
+                Number(row.def),
+                Number(row.hp),
+                selectedLeagueCp
+            );
+
+        return mapRecordWithRank(
+            row,
+            pokemon.name,
+            rankResult
+        );
+    }
+
+    function updateProgress(
+        currentIndex: number,
+        total: number
+    ) {
+        setProgress(
+            Math.round(
+                ((currentIndex + 1) / total) * 100
+            )
+        );
+    }
 
     async function processFile(
         file: File
     ) {
+
+        setProgress(0);
 
         const records =
             await parseCsv(file);
@@ -65,60 +132,17 @@ export default function App() {
             i < total;
             i++
         ) {
-
-            const row =
-                records[i];
-
-            const pokemon =
-                getPokemonByDex(
-                    Number(row.dex)
-                );
-            if (!pokemon) {
-
-                console.error(
-                    `Pokemon dex ${row.dex} not found`
-                );
-
-                continue;
-
-            }
-            const rankResult =
-                await calculateRank(
-
-                    pokemon.attack,
-                    pokemon.defense,
-                    pokemon.stamina,
-
-                    Number(row.atk),
-                    Number(row.def),
-                    Number(row.hp),
-
+            const rankedRecord =
+                await rankPokemonRecord(
+                    records[i],
                     leagueCp
                 );
-            
-            processed.push({
 
-                ...row,
+            if (rankedRecord) {
+                processed.push(rankedRecord);
+            }
 
-                name: pokemon.name,
-
-                rank:
-                    rankResult.rank,
-
-                level:
-                    rankResult.level,
-
-                cp:
-                    rankResult.cp
-
-            });
-            
-            setProgress(
-                Math.round(
-                    ((i + 1) / total)
-                    * 100
-                )
-            );
+            updateProgress(i, total);
         }
 
         setRows(processed);

@@ -7,18 +7,22 @@ type Props = {
 export default function CsvUploader({
   onFileSelected
 }: Props) {
+  function handleFileChange(
+    event: React.ChangeEvent<HTMLInputElement>
+  ) {
+    const selectedFile =
+      event.target.files?.[0];
+
+    if (selectedFile) {
+      onFileSelected(selectedFile);
+    }
+  }
+
   return (
     <input
       type="file"
       accept=".csv"
-      onChange={(e) => {
-        const file =
-          e.target.files?.[0];
-          console.log("Archivo seleccionado", file);
-        if (file) {
-          onFileSelected(file);
-        }
-      }}
+      onChange={handleFileChange}
     />
   );
 }

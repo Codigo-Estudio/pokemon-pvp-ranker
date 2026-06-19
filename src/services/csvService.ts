@@ -1,8 +1,10 @@
 import Papa from "papaparse";
 
+import { PokemonRecord } from "../types/PokemonRecord";
+
 export function parseCsv(
   file: File
-): Promise<any[]> {
+): Promise<PokemonRecord[]> {
 
   return new Promise((resolve, reject) => {
 
@@ -13,7 +15,7 @@ export function parseCsv(
       skipEmptyLines: true,
 
       complete(results) {
-        resolve(results.data);
+        resolve(results.data as PokemonRecord[]);
       },
 
       error(error) {
