@@ -5,6 +5,8 @@ import { PokemonStatsRecord } from "../types/PokemonBaseStats";
 const pokemonStatsByDex =
   new Map<number, PokemonStatsRecord>();
 
+const pokemonStatsList: PokemonStatsRecord[] = [];
+
 function parsePokemonStatsEntry(
   name: string,
   rawValue: string
@@ -38,6 +40,7 @@ Object.entries(pokeListObj).forEach(
       );
 
     if (parsedEntry) {
+      pokemonStatsList.push(parsedEntry);
       pokemonStatsByDex.set(
         parsedEntry.dex,
         parsedEntry
@@ -53,4 +56,10 @@ export function getPokemonByDex(
 
   return pokemonStatsByDex.get(dex) ?? null;
 
+}
+
+export function getAllPokemon(): PokemonStatsRecord[] {
+  return [...pokemonStatsList].sort((first, second) =>
+    first.name.localeCompare(second.name)
+  );
 }
