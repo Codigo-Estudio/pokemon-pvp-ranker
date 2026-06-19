@@ -2,6 +2,10 @@
 
 Aplicación web hecha con `React + TypeScript + Vite` para calcular el ranking PvP de Pokémon a partir de un archivo CSV con IVs.
 
+Repositorio publicado en GitHub:
+
+- `https://github.com/Codigo-Estudio/pokemon-pvp-ranker`
+
 La app:
 
 - carga un archivo `.csv`
@@ -42,6 +46,87 @@ Actualmente la interfaz permite:
 ```bash
 npm install
 ```
+
+## Repositorio y despliegue
+
+El código fuente está versionado en GitHub y listo para seguir con un despliegue en plataformas estáticas como GitHub Pages, Vercel o Netlify.
+
+### Repositorio remoto
+
+- `origin`: `https://github.com/Codigo-Estudio/pokemon-pvp-ranker.git`
+
+### Estado actual
+
+- repositorio Git inicializado
+- rama principal: `main`
+- build de producción validada con `npm run build`
+- archivo `.gitignore` agregado para excluir `node_modules`, `dist` y otros archivos generados
+
+### Opciones de despliegue recomendadas
+
+#### GitHub Pages
+
+Recomendado si quiere alojar el proyecto directamente desde GitHub.
+
+Pasos generales:
+
+1. instalar una estrategia de despliegue para Vite, por ejemplo con `gh-pages`
+2. configurar `base` en `vite.config.js` si el sitio se publicará bajo el nombre del repositorio
+3. generar la carpeta `dist` con `npm run build`
+4. publicar la build en la rama usada por GitHub Pages
+
+Ideal para:
+
+- proyectos estáticos
+- portafolios
+- demos simples
+
+#### Vercel
+
+Recomendado si quiere un flujo más automático y simple.
+
+Pasos generales:
+
+1. importar el repositorio desde Vercel
+2. detectar el proyecto como `Vite`
+3. usar la configuración por defecto:
+	- build command: `npm run build`
+	- output directory: `dist`
+4. desplegar
+
+Ideal para:
+
+- despliegue rápido
+- previews automáticos por commit
+- configuración mínima
+
+#### Netlify
+
+También es una muy buena opción para sitios estáticos.
+
+Pasos generales:
+
+1. importar el repositorio desde Netlify
+2. configurar:
+	- build command: `npm run build`
+	- publish directory: `dist`
+3. desplegar
+
+Ideal para:
+
+- frontends estáticos
+- previews por rama o pull request
+- configuración sencilla desde interfaz web
+
+### Recomendación práctica
+
+Para este proyecto con `React + Vite`, la opción más simple suele ser:
+
+1. `Vercel`
+2. `Netlify`
+3. `GitHub Pages`
+
+`GitHub Pages` funciona bien, pero normalmente requiere un poco más de configuración en Vite si el sitio no vive en la raíz del dominio.
 
 ## Scripts disponibles
 
@@ -186,10 +271,15 @@ src/
 
 - `src/App.tsx`: flujo principal de carga, procesamiento y renderizado
 - `src/services/csvService.ts`: lectura del CSV
-- `src/services/pokeApi.ts`: consulta a `PokeAPI`
 - `src/services/rankCalculator.ts`: integración entre caché y ranking
 - `src/ranking/rankingEngine.ts`: cálculo de ranking PvP
 - `src/utils/csvExport.ts`: exportación del resultado
+
+## Cambios recientes
+
+- se corrigieron errores de TypeScript para permitir una build exitosa
+- se agregó `src/data/pokeListObj.d.ts` para tipar el archivo `pokeListObj.js`
+- se ajustó `src/services/rankCalculator.ts` para tipado estricto en la búsqueda del ranking
 
 ## Nota
 
