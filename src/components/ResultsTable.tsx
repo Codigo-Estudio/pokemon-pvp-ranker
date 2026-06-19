@@ -13,12 +13,12 @@ type ColumnDefinition = {
 const RESULT_COLUMNS: ColumnDefinition[] = [
   { key: "dex", label: "Dex" },
   { key: "name", label: "Name" },
-  { key: "atk", label: "Atk" },
-  { key: "def", label: "Def" },
-  { key: "hp", label: "HP" },
   { key: "rank", label: "Rank" },
   { key: "level", label: "Level" },
-  { key: "cp", label: "CP" }
+  { key: "cp", label: "CP" },
+  { key: "atk", label: "Atk" },
+  { key: "def", label: "Def" },
+  { key: "hp", label: "HP" }
 ];
 
 function buildRowKey(
