@@ -7,5 +7,7 @@ export interface PokemonBaseStats {
 export interface PokemonStatsRecord
   extends PokemonBaseStats {
   dex: number;
-  name: string;
+  baseDex: number;
+  pokemonId: string;
+  displayName: string;
 }

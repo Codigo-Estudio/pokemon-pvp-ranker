@@ -1,11 +1,11 @@
-import { useMemo, useState } from "react";
 import { PokemonRecord } from "../types/PokemonRecord";
-import Icon from "./Icon";
 import { classifyRank } from "../utils/rankClassification";
+import { SortState, useTableControls } from "../hooks/useTableControls";
+import DataTableToolbar from "./DataTableToolbar";
+import DataTablePagination from "./DataTablePagination";
+import DataTableHeader from "./DataTableHeader";
 
 type Props = { data: PokemonRecord[]; leagueCp: number };
-type SortDirection = "asc" | "desc";
-type SortState = { key: keyof PokemonRecord; direction: SortDirection };
 type Filters = Record<"dex" | "rank" | "level" | "cp" | "atk" | "def" | "hp", string> & { name: string };
 
 const columns: Array<{ key: keyof Filters; label: string }> = [
@@ -14,6 +14,14 @@ const columns: Array<{ key: keyof Filters; label: string }> = [
   { key: "cp", label: "CP" }, { key: "atk", label: "Atk" },
   { key: "def", label: "Def" }, { key: "hp", label: "HP" }
 ];
+
+const tableColumns = columns.map(({ key, label }) => ({
+  key,
+  label,
+  filterAriaLabel: `Filtrar por ${key}`,
+  filterPlaceholder: key === "name" ? "Buscar nombre..." : "Min - Máx",
+  showSearchIcon: key === "name"
+}));
 
 const emptyFilters: Filters = { dex: "", name: "", rank: "", level: "", cp: "", atk: "", def: "", hp: "" };
 
@@ -26,82 +34,62 @@ function matchesNumericFilter(value: number | undefined, filter: string): boolea
   return Number(value) === minimum;
 }
 
-function createPageNumbers(current: number, total: number): Array<number | "ellipsis"> {
-  if (total <= 7) return Array.from({ length: total }, (_, index) => index + 1);
-  const candidates = new Set([1, total, current - 1, current, current + 1].filter((page) => page > 0 && page <= total));
-  const sorted = [...candidates].sort((a, b) => a - b);
-  return sorted.flatMap((page, index) => index > 0 && page - sorted[index - 1] > 1 ? ["ellipsis", page] : [page]);
+function comparePokemonRows(first: PokemonRecord, second: PokemonRecord, sort: SortState<keyof PokemonRecord>) {
+  const firstValue = first[sort.key] ?? "";
+  const secondValue = second[sort.key] ?? "";
+  const comparison = typeof firstValue === "string"
+    ? firstValue.localeCompare(String(secondValue))
+    : Number(firstValue) - Number(secondValue);
+
+  return sort.direction === "asc" ? comparison : -comparison;
 }
 
 export default function ResultsTable({ data, leagueCp }: Props) {
-  const [filters, setFilters] = useState<Filters>(emptyFilters);
-  const [sort, setSort] = useState<SortState>({ key: "rank", direction: "asc" });
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-
-  const filteredRows = useMemo(() => data.filter((row) =>
-    (row.name ?? "").toLowerCase().includes(filters.name.toLowerCase()) &&
-    columns.filter(({ key }) => key !== "name").every(({ key }) => matchesNumericFilter(row[key] as number | undefined, filters[key]))
-  ).sort((first, second) => {
-    const firstValue = first[sort.key] ?? "";
-    const secondValue = second[sort.key] ?? "";
-    const comparison = typeof firstValue === "string"
-      ? firstValue.localeCompare(String(secondValue))
-      : Number(firstValue) - Number(secondValue);
-    return sort.direction === "asc" ? comparison : -comparison;
-  }), [data, filters, sort]);
-
-  const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
-  const currentPage = Math.min(page, totalPages);
-  const visibleRows = filteredRows.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-  const firstVisible = filteredRows.length ? (currentPage - 1) * pageSize + 1 : 0;
-  const lastVisible = Math.min(currentPage * pageSize, filteredRows.length);
-
-  function updateFilter(key: keyof Filters, value: string) {
-    setFilters((current) => ({ ...current, [key]: value }));
-    setPage(1);
-  }
-
-  function toggleSort(key: keyof PokemonRecord) {
-    setSort((current) => ({ key, direction: current.key === key && current.direction === "asc" ? "desc" : "asc" }));
-  }
+  const {
+    filters,
+    sort,
+    pageSize,
+    currentPage,
+    filteredRows,
+    visibleRows,
+    totalPages,
+    firstVisible,
+    lastVisible,
+    updateFilter,
+    toggleSort,
+    resetFilters,
+    setPage,
+    updatePageSize
+  } = useTableControls<PokemonRecord, Filters, keyof PokemonRecord>({
+    data,
+    emptyFilters,
+    initialSort: { key: "rank", direction: "asc" },
+    applyFilters: (row, currentFilters) => (
+      (row.name ?? "").toLowerCase().includes(currentFilters.name.toLowerCase()) &&
+      columns.filter(({ key }) => key !== "name").every(({ key }) => matchesNumericFilter(row[key] as number | undefined, currentFilters[key]))
+    ),
+    compareRows: comparePokemonRows
+  });
 
   return (
     <section className="results-section" aria-label="Resultados del ranking">
-      <div className="results-toolbar">
-        <span>{filteredRows.length.toLocaleString()} resultados</span>
-        <button className="button button--muted" disabled={!Object.values(filters).some(Boolean)} onClick={() => { setFilters(emptyFilters); setPage(1); }}>
-          <Icon name="filter" /> Limpiar filtros
-        </button>
-        <label>Registros por página:
-          <select value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(1); }}>
-            {[10, 25, 50, 100].map((size) => <option key={size}>{size}</option>)}
-          </select>
-        </label>
-      </div>
+      <DataTableToolbar
+        resultLabel={`${filteredRows.length.toLocaleString()} resultados`}
+        hasActiveFilters={Object.values(filters).some(Boolean)}
+        pageSize={pageSize}
+        onResetFilters={resetFilters}
+        onPageSizeChange={updatePageSize}
+      />
 
       <div className="table-scroll">
         <table>
-          <thead>
-            <tr>{columns.map(({ key, label }) => (
-              <th key={key} aria-sort={sort.key === key ? `${sort.direction}ending` : "none"}>
-                <button className="sort-button" onClick={() => toggleSort(key as keyof PokemonRecord)}>{label}<span>⇅</span></button>
-              </th>
-            ))}</tr>
-            <tr className="filter-row">{columns.map(({ key }) => (
-              <th key={key}>
-                <div className="filter-control">
-                  <input
-                    aria-label={`Filtrar por ${key}`}
-                    placeholder={key === "name" ? "Buscar nombre..." : "Min - Máx"}
-                    value={filters[key]}
-                    onChange={(event) => updateFilter(key, event.target.value)}
-                  />
-                  {key === "name" && <Icon name="search" size={17} />}
-                </div>
-              </th>
-            ))}</tr>
-          </thead>
+          <DataTableHeader
+            columns={tableColumns}
+            filters={filters}
+            sort={sort}
+            onToggleSort={(key) => toggleSort(key as keyof PokemonRecord)}
+            onUpdateFilter={updateFilter}
+          />
           <tbody>
             {visibleRows.map((row, index) => {
               const classification = classifyRank(row, leagueCp);
@@ -126,16 +114,14 @@ export default function ResultsTable({ data, leagueCp }: Props) {
         </table>
       </div>
 
-      <div className="pagination">
-        <span>Mostrando {firstVisible} a {lastVisible} de {filteredRows.length.toLocaleString()} registros</span>
-        <nav aria-label="Paginación">
-          <button disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}><Icon name="chevronLeft" size={16} /> Anterior</button>
-          {createPageNumbers(currentPage, totalPages).map((item, index) => item === "ellipsis"
-            ? <span key={`ellipsis-${index}`}>…</span>
-            : <button key={item} className={item === currentPage ? "active" : ""} onClick={() => setPage(item)}>{item}</button>)}
-          <button disabled={currentPage === totalPages} onClick={() => setPage(currentPage + 1)}>Siguiente <Icon name="chevronRight" size={16} /></button>
-        </nav>
-      </div>
+      <DataTablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        firstVisible={firstVisible}
+        lastVisible={lastVisible}
+        totalRows={filteredRows.length}
+        onPageChange={setPage}
+      />
     </section>
   );
 }

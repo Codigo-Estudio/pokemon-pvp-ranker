@@ -1,4 +1,6 @@
 type IconName =
+  | "book"
+  | "bars"
   | "check"
   | "close"
   | "chevronDown"
@@ -7,7 +9,9 @@ type IconName =
   | "download"
   | "file"
   | "filter"
+  | "pokedex"
   | "search"
+  | "user"
   | "upload"
   | "warning";
 
@@ -17,6 +21,8 @@ type Props = {
 };
 
 const paths: Record<IconName, React.ReactNode> = {
+  book: <><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H20v15H6.5A2.5 2.5 0 0 0 4 21.5Z" /><path d="M8 8h8" /><path d="M8 12h8" /></>,
+  bars: <><path d="M4 7h16" /><path d="M4 12h16" /><path d="M4 17h16" /></>,
   check: <path d="m5 12 4 4L19 6" />,
   close: <><path d="M18 6 6 18" /><path d="m6 6 12 12" /></>,
   chevronDown: <path d="m6 9 6 6 6-6" />,
@@ -25,7 +31,9 @@ const paths: Record<IconName, React.ReactNode> = {
   download: <><path d="M12 3v12" /><path d="m7 10 5 5 5-5" /><path d="M5 21h14" /></>,
   file: <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" /><path d="M14 2v6h6" /></>,
   filter: <path d="M4 5h16l-6.5 7.3V19l-3 1.5v-8.2Z" />,
+  pokedex: <><path d="M12 4a8 8 0 1 0 8 8" /><path d="M4 12h16" /><circle cx="12" cy="12" r="2.5" /></>,
   search: <><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></>,
+  user: <><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" /><path d="M5 20a7 7 0 0 1 14 0" /></>,
   upload: <><path d="M12 16V4" /><path d="m7 9 5-5 5 5" /><path d="M5 20h14" /></>,
   warning: <><path d="M10.3 3.7 2.6 18a2 2 0 0 0 1.8 3h15.2a2 2 0 0 0 1.8-3L13.7 3.7a2 2 0 0 0-3.4 0Z" /><path d="M12 9v4" /><path d="M12 17h.01" /></>
 };

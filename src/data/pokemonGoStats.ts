@@ -1,4 +1,4 @@
-import { pokeListObj } from "./pokeListObj";
+import dexList from "./dexList.json";
 
 import { PokemonStatsRecord } from "../types/PokemonBaseStats";
 
@@ -9,53 +9,61 @@ const pokemonStatsByName =
 
 const pokemonStatsList: PokemonStatsRecord[] = [];
 
-function formatPokemonName(
-  name: string
-): string {
-  return name.replace(/_/g, " ");
-}
+type DexListEntry = {
+  dex?: number;
+  baseDex?: number;
+  pokemonId?: string;
+  displayName?: string;
+  stats?: {
+    attack?: number;
+    defense?: number;
+    stamina?: number;
+  };
+};
 
-function normalizePokemonName(
-  name: string
+export function normalizePokemonIdentifier(
+  value: string
 ): string {
-  return name
+  return value
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/ +/g, "")
-    .replace(/[^a-zA-Z0-9]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, " ")
+    .trim()
+    .replace(/\s+/g, "_")
     .toLowerCase();
 }
 
 function parsePokemonStatsEntry(
-  name: string,
-  rawValue: string
+  rawValue: DexListEntry
 ): PokemonStatsRecord | null {
-  const parts =
-    rawValue.split(",");
-
-  const dex = Number(
-    parts[0].match(/\d+/)?.[0]
-  );
-
-  if (Number.isNaN(dex)) {
+  if (
+    rawValue.dex === undefined ||
+    rawValue.baseDex === undefined ||
+    !rawValue.pokemonId ||
+    !rawValue.displayName ||
+    rawValue.stats?.attack === undefined ||
+    rawValue.stats.defense === undefined ||
+    rawValue.stats.stamina === undefined
+  ) {
     return null;
   }
 
   return {
-    dex,
-    name: formatPokemonName(name),
-    attack: Number(parts[1]),
-    defense: Number(parts[2]),
-    stamina: Number(parts[3])
+    dex: rawValue.dex,
+    baseDex: rawValue.baseDex,
+    pokemonId: rawValue.pokemonId,
+    displayName: rawValue.displayName,
+    attack: rawValue.stats.attack,
+    defense: rawValue.stats.defense,
+    stamina: rawValue.stats.stamina
   };
 }
 
-Object.entries(pokeListObj).forEach(
-  ([name, value]) => {
+Object.values(dexList as Record<string, DexListEntry>).forEach(
+  (value) => {
     const parsedEntry =
       parsePokemonStatsEntry(
-        name,
-        String(value)
+        value
       );
 
     if (parsedEntry) {
@@ -65,7 +73,7 @@ Object.entries(pokeListObj).forEach(
         parsedEntry
       );
       pokemonStatsByName.set(
-        normalizePokemonName(parsedEntry.name),
+        normalizePokemonIdentifier(parsedEntry.pokemonId),
         parsedEntry
       );
     }
@@ -85,7 +93,7 @@ export function getPokemonByName(
   name: string
 ): PokemonStatsRecord | null {
   return pokemonStatsByName.get(
-    normalizePokemonName(name)
+    normalizePokemonIdentifier(name)
   ) ?? null;
 }
 
@@ -98,8 +106,12 @@ export function findPokemon(
     return null;
   }
 
-  if (/^\d+$/.test(rawValue)) {
-    return getPokemonByDex(Number(rawValue));
+  if (/^\d+(?:\.\d+)?$/.test(rawValue)) {
+    const dexMatch = getPokemonByDex(Number(rawValue));
+
+    if (dexMatch) {
+      return dexMatch;
+    }
   }
 
   return getPokemonByName(rawValue);
@@ -107,6 +119,6 @@ export function findPokemon(
 
 export function getAllPokemon(): PokemonStatsRecord[] {
   return [...pokemonStatsList].sort((first, second) =>
-    first.name.localeCompare(second.name)
+    first.displayName.localeCompare(second.displayName)
   );
 }

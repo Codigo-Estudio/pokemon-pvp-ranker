@@ -11,9 +11,11 @@ export type CsvParseResult = {
   total: number;
 };
 
-const REQUIRED_COLUMNS = ["atk", "def", "hp"] as const;
-const POKEMON_IDENTIFIER_COLUMNS = ["dex", "pokemon"] as const;
-const DEX_OR_NAME_PATTERN = /^[A-Za-z0-9 ]+$/;
+const REQUIRED_COLUMNS = ["dex", "iv_a", "iv_d", "iv_s"] as const;
+
+function isDexLookupValue(value: string): boolean {
+  return /^\d+(?:\.\d+)?$/.test(value.trim());
+}
 
 function normalizeColumnName(columnName: string): string {
   return columnName
@@ -23,7 +25,7 @@ function normalizeColumnName(columnName: string): string {
 }
 
 function isUnusedTemplateRow(row: Record<string, unknown>): boolean {
-  return [...POKEMON_IDENTIFIER_COLUMNS, ...REQUIRED_COLUMNS].every((column) =>
+  return REQUIRED_COLUMNS.every((column) =>
     row[column] === undefined || row[column] === null || String(row[column]).trim() === ""
   );
 }
@@ -31,13 +33,7 @@ function isUnusedTemplateRow(row: Record<string, unknown>): boolean {
 function getPokemonIdentifier(
   row: Record<string, unknown>
 ): string {
-  const dexValue = String(row.dex ?? "").trim();
-
-  if (dexValue) {
-    return dexValue;
-  }
-
-  return String(row.pokemon ?? "").trim();
+  return String(row.dex ?? "").trim();
 }
 
 function buildRowNumber(index: number): number {
@@ -66,19 +62,19 @@ function validateRow(
     return createIssue(index, "dex", "Debes indicar un número de Dex o un nombre de Pokémon");
   }
 
-  if (!DEX_OR_NAME_PATTERN.test(pokemonIdentifier)) {
-    return createIssue(
-      index,
-      "dex",
-      `Formato inválido: “${pokemonIdentifier}”. Solo se aceptan letras, números o espacios sin puntos ni comas`
-    );
-  }
-
   if (!findPokemon(pokemonIdentifier)) {
-    return createIssue(index, "dex", `No existe un Pokémon para el valor “${pokemonIdentifier}”`);
+    if (isDexLookupValue(pokemonIdentifier)) {
+      return createIssue(index, "dex", `El valor ${pokemonIdentifier} no existe en nuestra pokedex.`);
+    }
+
+    return createIssue(index, "dex", `El pokemon ${pokemonIdentifier} no existe en nuestra pokedex.`);
   }
 
   for (const column of REQUIRED_COLUMNS) {
+    if (column === "dex") {
+      continue;
+    }
+
     const value = row[column];
     if (value === undefined || value === null || String(value).trim() === "") {
       return createIssue(index, column, "Valor vacío");
@@ -118,11 +114,6 @@ export function parseCsv(
         const fields = results.meta.fields ?? [];
         const missingColumn = REQUIRED_COLUMNS.find((column) => !fields.includes(column));
 
-        if (!fields.includes("dex") && !fields.includes("pokemon")) {
-          reject(new Error("El archivo debe contener la columna “dex” o la columna “pokemon”."));
-          return;
-        }
-
         if (missingColumn) {
           reject(new Error(`El archivo no contiene la columna obligatoria “${missingColumn}”.`));
           return;
@@ -148,11 +139,10 @@ export function parseCsv(
 
           records.push({
             dex: pokemon.dex,
-            atk: Number(row.atk),
-            def: Number(row.def),
-            hp: Number(row.hp),
-            shadow: Number(row.shadow ?? 0),
-            gl_evo: row.gl_evo ? String(row.gl_evo) : undefined
+            atk: Number(row.iv_a),
+            def: Number(row.iv_d),
+            hp: Number(row.iv_s),
+            name: pokemon.displayName
           });
           sourceRows.push(buildRowNumber(index));
         });

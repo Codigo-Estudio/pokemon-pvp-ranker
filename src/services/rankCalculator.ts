@@ -120,6 +120,7 @@ function mapRankEntryToResult(
   return {
     rank: row.rank,
     level: row.level,
-    cp: row.cp
+    cp: row.cp,
+    statProduct: row.statProduct
   };
 }

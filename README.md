@@ -1,32 +1,35 @@
 # Pokemon PvP Ranker
 
-Aplicación web hecha con `React + TypeScript + Vite` para calcular rankings PvP de Pokémon a partir de archivos CSV con IVs.
+Aplicacion web hecha con React, TypeScript y Vite para calcular rankings PvP de Pokemon a partir de archivos CSV con IVs o historiales exportados.
 
 Repositorio publicado en GitHub:
 
-- `https://github.com/Codigo-Estudio/pokemon-pvp-ranker`
+- https://github.com/Codigo-Estudio/pokemon-pvp-ranker
 
 ## Resumen
 
-La aplicación permite procesar archivos CSV con spreads de IVs para obtener su ranking PvP por liga usando datos locales del proyecto, sin depender de servicios externos en tiempo de ejecución.
+La aplicacion procesa lotes de registros, resuelve cada especie con un dataset local y calcula su mejor posicion PvP para la liga seleccionada. El flujo corre completamente del lado del cliente y no depende de APIs externas en tiempo de ejecucion.
 
-## Características principales
+## Caracteristicas principales
 
 - carga de archivos `.csv`
-- selección de liga (`Little`, `Great`, `Ultra`, `Master`)
-- cálculo de ranking PvP por combinación de IVs
-- uso de dataset local para nombre y stats base del Pokémon
-- visualización tabular de resultados
-- exportación del resultado a CSV
+- seleccion de liga: `Little League`, `Great League`, `Ultra League` y `Master League`
+- soporte para busqueda de especie por `dex` o por nombre de Pokemon
+- validacion de filas con detalle de errores por fila y columna
+- calculo de ranking PvP por combinacion de IVs
+- uso de cache de rankings por especie y liga
+- tabla de resultados con filtros, ordenamiento y paginacion
+- exportacion del resultado procesado a CSV
+- descarga de plantilla de entrada
 
 ## Stack
 
-- `React 19`
-- `TypeScript`
-- `Vite`
-- `PapaParse`
+- React 19
+- TypeScript
+- Vite 7
+- PapaParse
 
-## Uso rápido
+## Uso rapido
 
 ### Instalar dependencias
 
@@ -40,23 +43,70 @@ npm install
 npm run dev
 ```
 
-### Generar build
+### Generar build de produccion
 
 ```bash
 npm run build
 ```
 
-## Documentación adicional
+### Previsualizar la build
 
-- `README.funcional.md`: descripción funcional de la app, flujo de uso y formato de entrada
-- `README.tecnico.md`: arquitectura, cálculo, estructura del proyecto y detalles técnicos
+```bash
+npm run preview
+```
+
+### Validar rankings
+
+```bash
+npm run validate:rankings
+```
+
+## Formato de entrada
+
+El archivo CSV debe incluir encabezados. Actualmente el parser espera estas columnas:
+
+- `dex`
+- `iv_a`
+- `iv_d`
+- `iv_s`
+
+La columna `dex` admite tanto un numero de Pokedex como el nombre de la especie. Filas vacias de plantilla se ignoran automaticamente.
+
+### Ejemplo
+
+```csv
+dex,iv_a,iv_d,iv_s
+1,0,15,15
+bulbasaur,1,14,15
+4,0,13,15
+```
+
+## Resultado
+
+Por cada fila valida, la aplicacion devuelve una tabla con:
+
+- `Dex`
+- `Nombre`
+- `Rank`
+- `Nivel`
+- `CP`
+- `Atk`
+- `Def`
+- `HP`
+
+Ademas muestra progreso, cantidad de registros exitosos, errores detectados y detalle ampliado de incidencias cuando corresponde.
+
+## Documentacion adicional
+
+- `README.funcional.md`: flujo funcional, reglas de entrada y comportamiento de la interfaz
+- `README.tecnico.md`: arquitectura, estructura real del proyecto y logica de calculo
 
 ## Despliegue
 
-Al ser una aplicación estática basada en `Vite`, puede desplegarse en:
+Al ser una aplicacion estatica basada en Vite, puede desplegarse en:
 
-- `Vercel`
-- `Netlify`
-- `GitHub Pages`
+- Vercel
+- Netlify
+- GitHub Pages
 
-La build de producción se genera con `npm run build` y queda en `dist`.
+La build de produccion se genera con `npm run build` y queda en `dist`.

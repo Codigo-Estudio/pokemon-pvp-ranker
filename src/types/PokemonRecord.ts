@@ -5,10 +5,6 @@ export interface PokemonRecord {
   def: number;
   hp: number;
 
-  shadow: number;
-
-  gl_evo?: string;
-
   name?: string;
 
   rank?: number;
