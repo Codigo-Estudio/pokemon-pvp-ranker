@@ -1,29 +1,11 @@
 import { CPM, DEFAULT_MAX_LEVEL, getLevelIndex } from "./calculateCore";
+import { calculateCp } from "./cpCalculator";
 
 import { RankEntry } from "../types/RankEntry";
 
 const INDIVIDUAL_VALUE_CAP = 15;
 const MASTER_LEAGUE_CP = -1;
 const MAX_LEVEL_INDEX = Math.min(getLevelIndex(DEFAULT_MAX_LEVEL), CPM.length - 1);
-
-function calculateCp(
-  baseAtk: number,
-  baseDef: number,
-  baseSta: number,
-  atk: number,
-  def: number,
-  sta: number,
-  cpm: number
-): number {
-  return Math.floor(
-    ((baseAtk + atk) *
-      Math.sqrt(baseDef + def) *
-      Math.sqrt(baseSta + sta) *
-      cpm *
-      cpm) /
-    10
-  );
-}
 
 function createRankEntry(
   baseAtk: number,

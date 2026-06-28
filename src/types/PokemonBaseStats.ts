@@ -10,4 +10,6 @@ export interface PokemonStatsRecord
   baseDex: number;
   pokemonId: string;
   displayName: string;
+  types: string[];
+  evolutionChain: number[];
 }

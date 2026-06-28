@@ -14,6 +14,8 @@ type DexListEntry = {
   baseDex?: number;
   pokemonId?: string;
   displayName?: string;
+  types?: string[];
+  evolutionChain?: number[];
   stats?: {
     attack?: number;
     defense?: number;
@@ -53,6 +55,8 @@ function parsePokemonStatsEntry(
     baseDex: rawValue.baseDex,
     pokemonId: rawValue.pokemonId,
     displayName: rawValue.displayName,
+    types: rawValue.types ?? [],
+    evolutionChain: rawValue.evolutionChain ?? [rawValue.dex],
     attack: rawValue.stats.attack,
     defense: rawValue.stats.defense,
     stamina: rawValue.stats.stamina
@@ -121,4 +125,12 @@ export function getAllPokemon(): PokemonStatsRecord[] {
   return [...pokemonStatsList].sort((first, second) =>
     first.displayName.localeCompare(second.displayName)
   );
+}
+
+export function getPokemonEvolutionChain(
+  pokemon: PokemonStatsRecord
+): PokemonStatsRecord[] {
+  return pokemon.evolutionChain
+    .map((dex) => getPokemonByDex(dex))
+    .filter((entry): entry is PokemonStatsRecord => entry !== null);
 }

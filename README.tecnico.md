@@ -2,7 +2,7 @@
 
 ## Objetivo tecnico
 
-Este proyecto procesa registros de Pokemon desde un CSV y calcula su ranking PvP en funcion del limite de CP de la liga seleccionada.
+Este proyecto procesa registros de Pokemon desde un CSV y tambien permite consultar rankings individuales y explorar el dataset local desde una interfaz React.
 
 La aplicacion usa un dataset local para resolver nombre y stats base por `dex` o nombre, y luego genera rankings a partir de todas las combinaciones de IVs posibles.
 
@@ -39,18 +39,33 @@ npm run preview
 npm run validate:rankings
 ```
 
+Observacion: en el estado actual del workspace, `package.json` declara este script pero no existe la carpeta `scripts/` con `validate-rankings.mjs`, por lo que hoy no es ejecutable sin restaurar ese archivo.
+
 ## Arquitectura general
 
 ### UI
 
-- `src/App.tsx`: coordina carga, procesamiento, progreso y renderizado
+- `src/App.tsx`: shell principal y enrutamiento interno entre paginas
+- `src/components/PageLayout.tsx`: layout comun de aplicacion
+- `src/components/AppNavigation.tsx`: navegacion principal y estado visual de pagina activa
 - `src/components/CsvUploader.tsx`: carga del archivo
 - `src/components/ProgressBar.tsx`: estado de avance
 - `src/components/ProcessingSummary.tsx`: resumen de exito y errores
 - `src/components/ProcessingIssuesModal.tsx`: detalle ampliado de incidencias
 - `src/components/ResultsTable.tsx`: tabla de resultados
+- `src/components/DataTableToolbar.tsx`: toolbar de tablas con contador, paginacion por pagina y reset
+- `src/components/DataTableHeader.tsx`: encabezado reusable con filtros y ordenamiento
+- `src/components/DataTablePagination.tsx`: paginacion reusable
 - `src/components/DownloadButton.tsx`: exportacion
 - `src/components/Icon.tsx`: iconos de la interfaz
+- `src/pages/MassRankingPage.tsx`: flujo de ranking masivo
+- `src/pages/SingleRankingPage.tsx`: flujo de ranking individual con cards por evolucion y liga
+- `src/pages/PokedexPage.tsx`: tabla de consulta del dataset local
+
+### Hooks
+
+- `src/hooks/useMassRanking.ts`: estado y flujo del procesamiento masivo
+- `src/hooks/useTableControls.ts`: filtros, ordenamiento y paginacion reutilizable para tablas
 
 ### Datos
 
@@ -78,15 +93,32 @@ npm run validate:rankings
 
 ## Flujo tecnico
 
-1. el usuario carga un CSV
-2. `csvService` parsea el archivo con `PapaParse`
-3. `App.tsx` recorre cada fila valida
-4. `pokemonGoStats.ts` resuelve stats base y nombre a partir de `dex` o nombre
+### Flujo de ranking masivo
+
+1. el usuario carga un CSV desde `MassRankingPage`
+2. `useMassRanking.ts` valida extension y tamano del archivo
+3. `csvService.ts` parsea el archivo con `PapaParse`
+4. `pokemonGoStats.ts` resuelve stats base y nombre a partir de `dex`
 5. `rankCalculator.ts` solicita el ranking para esa especie y liga
 6. `rankingCache.ts` reutiliza rankings previos si ya existen
 7. `rankingEngine.ts` construye el ranking si todavia no esta cacheado
-8. se obtiene el `rank`, `level` y `cp` del spread solicitado
+8. se obtiene `rank`, `level` y `cp` del spread solicitado
 9. la UI actualiza progreso, resumen, incidencias, tabla y exportacion
+
+### Flujo de ranking individual
+
+1. el usuario busca una especie desde `SingleRankingPage`
+2. `pokemonGoStats.ts` filtra coincidencias por nombre normalizado o `dex`
+3. al seleccionar una especie se obtiene su cadena evolutiva con `getPokemonEvolutionChain`
+4. por cada evolucion y por cada liga se invoca `calculateRank`
+5. la vista renderiza cards por evolucion con cards internas por liga
+6. el estado `Aplica` o `No aplica` se calcula por card comparando el `Nivel actual` del usuario contra el `level` esperado de esa liga
+
+### Flujo de Pokédex
+
+1. `PokedexPage.tsx` obtiene todas las especies con `getAllPokemon`
+2. `useTableControls.ts` aplica filtros, ordenamiento y paginacion
+3. la tabla renderiza `ID` y `Nombre`
 
 ## Logica de calculo
 
@@ -128,9 +160,14 @@ Detalles de validacion actuales:
 ```text
 src/
 	components/
+		AppNavigation.tsx
 		CsvUploader.tsx
+		DataTableHeader.tsx
+		DataTablePagination.tsx
+		DataTableToolbar.tsx
 		DownloadButton.tsx
 		Icon.tsx
+		PageLayout.tsx
 		ProcessingIssuesModal.tsx
 		ProcessingSummary.tsx
 		ProgressBar.tsx
@@ -139,8 +176,16 @@ src/
 		CpmLvl.json
 		dexList.json
 		pokemonGoStats.ts
+	hooks/
+		useMassRanking.ts
+		useTableControls.ts
+	pages/
+		MassRankingPage.tsx
+		PokedexPage.tsx
+		SingleRankingPage.tsx
 	ranking/
 		calculateCore.ts
+		cpCalculator.ts
 		rankingCache.ts
 		rankingEngine.ts
 	services/
