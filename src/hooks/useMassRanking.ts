@@ -19,14 +19,14 @@ function mapRecordWithRank(row: PokemonRecord, pokemonName: string, rank: RankRe
   return { ...row, name: pokemonName, rank: rank.rank, level: rank.level, cp: rank.cp };
 }
 
-async function rankPokemonRecord(row: PokemonRecord, selectedLeagueCp: number): Promise<PokemonRecord> {
+async function rankPokemonRecord(row: PokemonRecord, selectedLeagueCp: number, maxLevel: number): Promise<PokemonRecord> {
   const pokemon = getPokemonByDex(Number(row.dex));
   if (!pokemon) throw new Error(`No existe un Pok\u00e9mon con Dex ${row.dex}`);
-  const rank = await calculateRank(pokemon.attack, pokemon.defense, pokemon.stamina, row.atk, row.def, row.hp, selectedLeagueCp);
+  const rank = await calculateRank(pokemon.attack, pokemon.defense, pokemon.stamina, row.atk, row.def, row.hp, selectedLeagueCp, maxLevel);
   return mapRecordWithRank(row, pokemon.displayName, rank);
 }
 
-export function useMassRanking() {
+export function useMassRanking(maxLevel: number) {
   const [rows, setRows] = useState<PokemonRecord[]>([]);
   const [progress, setProgress] = useState(0);
   const [processedCount, setProcessedCount] = useState(0);
@@ -69,7 +69,7 @@ export function useMassRanking() {
       for (let index = 0; index < parsed.records.length; index++) {
         const record = parsed.records[index];
         try {
-          processed.push(await rankPokemonRecord(record, selectedLeagueCp));
+          processed.push(await rankPokemonRecord(record, selectedLeagueCp, maxLevel));
         } catch (error) {
           issues.push({
             row: parsed.sourceRows[index],

@@ -1,23 +1,23 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import Icon from "../components/Icon";
-import { CPM, DEFAULT_MAX_LEVEL, getLevelIndex } from "../ranking/calculateCore";
+import { CPM, getLevelIndex } from "../ranking/calculateCore";
 import { calculateCp } from "../ranking/cpCalculator";
 import { getAllPokemon, getPokemonEvolutionChain, normalizePokemonIdentifier } from "../data/pokemonGoStats";
 import { calculateRank } from "../services/rankCalculator";
 import { PokemonStatsRecord } from "../types/PokemonBaseStats";
+import { getLeagueIconSrc } from "../utils/leagueAssets";
 
 const DEFAULT_IV = 10;
 const DEFAULT_LEVEL = 10;
 const SEARCH_LIMIT = 10;
 const IV_OPTIONS = Array.from({ length: 16 }, (_, value) => value);
-const MAX_LEVEL = DEFAULT_MAX_LEVEL + 10;
 
 const leagues = [
-  { key: "little", name: "Little League", cpLimit: 500, colorClass: "little", accent: "#0B6C4A", icon: "○", detail: "Máx. 500 PC" },
-  { key: "great", name: "Great League", cpLimit: 1500, colorClass: "great", accent: "#1658C4", icon: "△", detail: "Máx. 1500 PC" },
-  { key: "ultra", name: "Ultra League", cpLimit: 2500, colorClass: "ultra", accent: "#927400", icon: "▽", detail: "Máx. 2500 PC" },
-  { key: "master", name: "Máster League", cpLimit: -1, colorClass: "master", accent: "#4A2A82", icon: "M", detail: "Sin límite" }
+  { key: "little", name: "Little League", cpLimit: 500, colorClass: "little", accent: "#0B6C4A", detail: "Máx. 500 PC" },
+  { key: "great", name: "Great League", cpLimit: 1500, colorClass: "great", accent: "#1658C4", detail: "Máx. 1500 PC" },
+  { key: "ultra", name: "Ultra League", cpLimit: 2500, colorClass: "ultra", accent: "#927400", detail: "Máx. 2500 PC" },
+  { key: "master", name: "Máster League", cpLimit: -1, colorClass: "master", accent: "#4A2A82", detail: "Sin límite" }
 ] as const;
 
 type LeagueKey = typeof leagues[number]["key"];
@@ -43,7 +43,17 @@ function formatTypes(types: string[]): string {
   return types.map((type) => type.charAt(0).toUpperCase() + type.slice(1)).join(" / ");
 }
 
-export default function SingleRankingPage() {
+function getSliderScaleMarks(maxLevel: number): number[] {
+  const marks = [1, 10, 20, 30, 40, maxLevel];
+
+  return Array.from(new Set(marks.filter((mark) => mark <= maxLevel))).sort((first, second) => first - second);
+}
+
+type SingleRankingPageProps = {
+  maxLevel: number;
+};
+
+export default function SingleRankingPage({ maxLevel }: SingleRankingPageProps) {
   const [searchValue, setSearchValue] = useState("");
   const [selectedPokemon, setSelectedPokemon] = useState<PokemonStatsRecord | null>(null);
   const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
@@ -98,7 +108,13 @@ export default function SingleRankingPage() {
     return getPokemonEvolutionChain(selectedPokemon);
   }, [selectedPokemon]);
 
-  const sliderProgress = `${((level - 1) / (MAX_LEVEL - 1)) * 100}%`;
+  const sliderScaleMarks = useMemo(() => getSliderScaleMarks(maxLevel), [maxLevel]);
+
+  const sliderProgress = `${((level - 1) / Math.max(maxLevel - 1, 1)) * 100}%`;
+
+  useEffect(() => {
+    setLevel((current) => Math.min(current, maxLevel));
+  }, [maxLevel]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -137,7 +153,8 @@ export default function SingleRankingPage() {
                   atk,
                   def,
                   hp,
-                  league.cpLimit
+                  league.cpLimit,
+                  maxLevel
                 );
 
                 return [league.key, {
@@ -176,7 +193,7 @@ export default function SingleRankingPage() {
     return () => {
       isCancelled = true;
     };
-  }, [selectedPokemon, evolutionChain, atk, def, hp, level]);
+  }, [selectedPokemon, evolutionChain, atk, def, hp, level, maxLevel]);
 
   function handlePokemonSelection(pokemon: PokemonStatsRecord) {
     setSelectedPokemon(pokemon);
@@ -192,7 +209,7 @@ export default function SingleRankingPage() {
     <section className="single-ranking-page" aria-label="Ranking individual">
       <header className="single-ranking-page__header">
         <div>
-          <h2>Pokédex</h2>
+          <h2>Ranking individual</h2>
           <p>Consulta el ranking de un Pokémon, sus evoluciones y rendimiento en cada liga.</p>
         </div>
       </header>
@@ -279,13 +296,20 @@ export default function SingleRankingPage() {
         <div className="single-ranking-level-layout">
           <div className="single-ranking-level-controls">
             <h3><span>3.</span> Define el nivel del Pokémon</h3>
-            <p>Arrastra el control para ajustar el nivel.</p>
-            <div className="single-ranking-slider-wrap" style={{ "--slider-progress": sliderProgress, "--slider-value": String(level) } as React.CSSProperties}>
+            <p>Arrastra el control para ajustar el nivel hasta {maxLevel}.</p>
+            <div
+              className="single-ranking-slider-wrap"
+              style={{
+                "--slider-progress": sliderProgress,
+                "--slider-value": String(level),
+                "--slider-max-level": String(maxLevel)
+              } as React.CSSProperties}
+            >
               <output>{level.toFixed(1)}</output>
               <input
                 type="range"
                 min={1}
-                max={MAX_LEVEL}
+                max={maxLevel}
                 step={0.5}
                 value={level}
                 onChange={(event) => setLevel(Number(event.target.value))}
@@ -293,12 +317,7 @@ export default function SingleRankingPage() {
                 disabled={!selectedPokemon}
               />
               <div className="single-ranking-slider-scale" aria-hidden="true">
-                <span>1</span>
-                <span>10</span>
-                <span>20</span>
-                <span>30</span>
-                <span>40</span>
-                <span>50</span>
+                {sliderScaleMarks.map((mark) => <span key={mark}>{mark}</span>)}
               </div>
             </div>
           </div>
@@ -307,7 +326,7 @@ export default function SingleRankingPage() {
             <article className="single-ranking-metric-card">
               <span>Nivel actual</span>
               <strong>{selectedPokemon ? level.toFixed(1) : "-"}</strong>
-              <small>de {MAX_LEVEL.toFixed(1)}</small>
+              <small>de {maxLevel.toFixed(1)}</small>
             </article>
             <article className="single-ranking-metric-card">
               <span>PC actual</span>
@@ -328,7 +347,7 @@ export default function SingleRankingPage() {
           <div className="single-ranking-results__legend" aria-hidden="true">
             {leagues.map((league) => (
               <div key={league.key} className={`single-ranking-results__legend-item single-ranking-results__legend-item--${league.colorClass}`}>
-                <span className="single-ranking-results__legend-icon">{league.icon}</span>
+                <img className="single-ranking-results__legend-icon" src={getLeagueIconSrc(league.key)} alt="" aria-hidden="true" />
                 <div>
                   <strong>{league.name}</strong>
                   <small>{league.detail}</small>
@@ -363,13 +382,12 @@ export default function SingleRankingPage() {
                       >
                         <header className="single-ranking-league-card__header">
                           <div className="single-ranking-league-card__title-row">
-                            <span
+                            <img
                               className="single-ranking-league-card__icon"
-                              style={{ "--league-accent": league.accent } as React.CSSProperties}
+                              src={getLeagueIconSrc(league.key)}
+                              alt=""
                               aria-hidden="true"
-                            >
-                              {league.icon}
-                            </span>
+                            />
                             <div>
                               <h5>{league.name}</h5>
                               <p>{league.cpLimit === -1 ? "Sin límite" : `Máx. ${league.cpLimit} PC`}</p>

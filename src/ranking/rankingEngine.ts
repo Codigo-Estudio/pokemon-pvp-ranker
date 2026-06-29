@@ -5,7 +5,6 @@ import { RankEntry } from "../types/RankEntry";
 
 const INDIVIDUAL_VALUE_CAP = 15;
 const MASTER_LEAGUE_CP = -1;
-const MAX_LEVEL_INDEX = Math.min(getLevelIndex(DEFAULT_MAX_LEVEL), CPM.length - 1);
 
 function createRankEntry(
   baseAtk: number,
@@ -69,13 +68,14 @@ function findBestLevelIndex(
   atk: number,
   def: number,
   sta: number,
-  leagueCp: number
+  leagueCp: number,
+  maxLevelIndex: number
 ): number {
   if (leagueCp === MASTER_LEAGUE_CP) {
-    return MAX_LEVEL_INDEX;
+    return maxLevelIndex;
   }
 
-  for (let levelIndex = MAX_LEVEL_INDEX; levelIndex >= 0; levelIndex--) {
+  for (let levelIndex = maxLevelIndex; levelIndex >= 0; levelIndex--) {
     const cp = calculateCp(baseAtk, baseDef, baseSta, atk, def, sta, CPM[levelIndex]);
 
     if (cp <= leagueCp) {
@@ -90,9 +90,11 @@ export function buildRanking(
   baseAtk: number,
   baseDef: number,
   baseSta: number,
-  leagueCp: number
+  leagueCp: number,
+  maxLevel = DEFAULT_MAX_LEVEL
 ): RankEntry[] {
   const ranks: RankEntry[] = [];
+  const maxLevelIndex = Math.min(getLevelIndex(maxLevel), CPM.length - 1);
 
   for (let atk = 0; atk <= INDIVIDUAL_VALUE_CAP; atk++) {
     for (let def = 0; def <= INDIVIDUAL_VALUE_CAP; def++) {
@@ -104,7 +106,8 @@ export function buildRanking(
           atk,
           def,
           sta,
-          leagueCp
+          leagueCp,
+          maxLevelIndex
         );
         const cpm = CPM[levelIndex];
         const cp = calculateCp(baseAtk, baseDef, baseSta, atk, def, sta, cpm);

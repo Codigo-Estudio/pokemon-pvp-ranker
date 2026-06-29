@@ -73,6 +73,11 @@ Observacion: en el estado actual del workspace, `package.json` declara este scri
 - `src/data/CpmLvl.json`: tabla local de multiplicadores por nivel
 - `src/data/pokemonGoStats.ts`: acceso por `dex`, nombre y busqueda normalizada
 
+### Assets publicos
+
+- `public/custom-assets/`: carpeta reservada para cargar logos, iconos e imagenes personalizadas servidas por Vite desde la raiz publica
+- uso esperado: cualquier archivo dentro de esa carpeta queda accesible con rutas como `/custom-assets/mi-logo.svg`
+
 ### Servicios
 
 - `src/services/csvService.ts`: parseo y validacion del CSV

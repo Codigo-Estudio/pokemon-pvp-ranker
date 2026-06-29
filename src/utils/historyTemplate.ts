@@ -1,6 +1,6 @@
 import Papa from "papaparse";
 
-const TEMPLATE_COLUMNS = ["dex", "atk", "def", "hp"];
+const TEMPLATE_COLUMNS = ["dex", "iv_a", "iv_d", "iv_s"];
 
 export function downloadHistoryTemplate() {
   const content = Papa.unparse([TEMPLATE_COLUMNS], {

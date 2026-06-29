@@ -22,7 +22,8 @@ export async function calculateRank(
   def: number,
   hp: number,
 
-  leagueCp: number
+  leagueCp: number,
+  maxLevel: number
 
 ): Promise<RankResult> {
 
@@ -31,7 +32,8 @@ export async function calculateRank(
       attack,
       defense,
       stamina,
-      leagueCp
+      leagueCp,
+      maxLevel
     );
 
   const row =
@@ -55,11 +57,12 @@ function getRankingCacheKey(
   attack: number,
   defense: number,
   stamina: number,
-  leagueCp: number
+  leagueCp: number,
+  maxLevel: number
 ): string {
 
   const key =
-    `${attack}_${defense}_${stamina}_${leagueCp}`;
+    `${attack}_${defense}_${stamina}_${leagueCp}_${maxLevel}`;
 
   return key;
 }
@@ -68,14 +71,16 @@ function getOrBuildRanking(
   attack: number,
   defense: number,
   stamina: number,
-  leagueCp: number
+  leagueCp: number,
+  maxLevel: number
 ): RankEntry[] {
   const key =
     getRankingCacheKey(
       attack,
       defense,
       stamina,
-      leagueCp
+      leagueCp,
+      maxLevel
     );
 
   let ranking =
@@ -88,7 +93,8 @@ function getOrBuildRanking(
         attack,
         defense,
         stamina,
-        leagueCp
+        leagueCp,
+        maxLevel
       );
 
     rankingCache.set(
